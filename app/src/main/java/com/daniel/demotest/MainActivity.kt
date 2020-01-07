@@ -95,6 +95,10 @@ class MainActivity : AppCompatActivity(), IView {
         ServerHelper().request {
             textView.text = it
         }
+
+        button.setOnClickListener {
+            startActivity(Intent(this, ListActivity::class.java ))
+        }
     }
 
     override fun receivedUserName(name: String) {

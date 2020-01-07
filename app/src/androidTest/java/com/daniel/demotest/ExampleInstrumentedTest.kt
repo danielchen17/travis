@@ -65,13 +65,12 @@ class ExampleInstrumentedTest {
         }
     }
 
-    fun testMockServer() {
-        Thread.sleep(100000)
+
+    fun notestMockServer() {
         onView(withId(R.id.textView)).check(matches(withText("false")))
     }
 
-    @Test
-    fun testAsynchronous() {
+    fun notestAsynchronous() {
         IdlingRegistry.getInstance().register(Idling.idlingResource)
         onView(withId(R.id.textView)).check(matches(withText("false")))
         IdlingRegistry.getInstance().unregister(Idling.idlingResource)
@@ -110,7 +109,7 @@ class ExampleInstrumentedTest {
         }
     }
 
-
+    @Test
     fun testDisplayUser() {
         Intents.init()
         onView(withId(R.id.button)).perform(click())

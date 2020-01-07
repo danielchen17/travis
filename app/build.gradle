@@ -1,8 +1,12 @@
+import io.github.httpbuilderng.http.HttpTask
+
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
+apply plugin: "io.github.http-builder-ng.http-plugin"
+
 
 android {
     compileSdkVersion 29
@@ -24,6 +28,104 @@ android {
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'x86', 'armeabi-v7a', 'x86_64'
+            universalApk true
+        }
+    }
+
+//    afterEvaluate {
+//        if (tasks.findByPath("connectedDebugAndroidTest") != null) {
+//            connectedDebugAndroidTest.finalizedBy processJenkinsConsole, notifySlack
+//        }
+//    }
+}
+
+// * pairs, delimited by a start(1)/pass(0)/fail(-2)/error(-1) status code result. At end of test
+String result = ""
+task processJenkinsConsole(type: HttpTask){
+
+    config {
+        request.uri = 'http://localhost:8080'
+        request.contentType = 'application/json'
+        request.accept = '*'
+        request.uri.path = '/job/staging/lastBuild/consoleText'
+    }
+    get {
+        response.success { server, body ->
+            String temp = ""
+            result = "Detail report : http://localhost:8080/job/staging/lastBuild/testReport/\n"
+            body.toString().eachLine { line ->
+                if (line.contains("Checking out Revision")) {
+                    int index = line.indexOf('origin/')
+                    result += "Tested branch: " + line.substring(index + 7, line.length() - 1) + "\n"
+                }
+                if (line.contains("Commit message")) {
+                    result += line.replace("\"", "") + "\n"
+                }
+
+                if (line.contains("INSTRUMENTATION_STATUS")) {
+
+                    String prefix = "test="
+                    if (line.contains(prefix)) {
+                        temp = line.substring(line.indexOf(prefix) + 5)
+                    }
+
+                    prefix = "INSTRUMENTATION_STATUS_CODE"
+                    if (line.contains(prefix)) {
+                        if (line.contains(prefix + ": 0")) {
+                            //passed
+                            result += ":white_check_mark:" + temp + "\n"
+                        } else if (line.contains(prefix + ": -1") || line.contains(prefix + ": -2")) {
+                            //failed or error
+                            result += ":x:" + temp + "\n"
+                        }
+                        temp = ""
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+task notifySlack(type: HttpTask){
+
+    config {
+        request.uri = 'https://hooks.slack.com'
+        request.contentType = 'application/json'
+        request.accept = '*'
+        request.uri.path = '/services/T0327TX3A/BRN5699ME/2hWvPawLGya3CXJFxQGyl82S'
+    }
+    post {
+        println(result)
+        request.body = '{"text" : "'+ result +'"}'
+        response.success {
+            println 'The event notification was successful'
+        }
+    }
+}
+
+task buildPrintout(type: JavaExec) {
+    android.applicationVariants.all { variant ->
+        //Runt he java task for every flavor
+        variant.productFlavors.each { flavor ->
+            println "Triggering customer configuration for flavor " + flavor.name
+            if (variant.buildType.name.equals('debug')) {
+                //Run the java task only for release builds
+                //Cant find the runtime classpath in android/gradle so I'll directly link to my jar file here. The jarfile contains the class I want to run (with the main method)
+                classpath += files("libs/my-jarfile.jar")
+                //This is the fully qualified name of my class, including package name (de.myapp.gradle) and the classname (ConfigureCustomer)
+                main = "com.daniel.demotest.ConfigureCustomer"
+                //Pass in arguments - in this case the customer's name and the version name for the app (from AndroidManifest.xml)
+                args flavor.name, variant.versionName
+            }
+        }
     }
 }
 
