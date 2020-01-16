@@ -8,6 +8,26 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: "io.github.http-builder-ng.http-plugin"
 
 
+//devicefarm {
+//    projectName "emqapp"
+//    devicePool "Pixel2"
+//    authentication {
+//        accessKey "AKIA3VR2PVWZSZGTKZOD"
+//        secretKey "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"
+//    }
+//    executionTimeoutMinutes 15
+//
+//    instrumentation {
+//        testSpecName "orch"
+//    }
+//
+//    devicestate {
+//        auxiliaryApps files(file("orchestrator-1.2.0.apk"), file("test-services-1.2.0.apk"))
+//    }
+//
+//}
+
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -18,11 +38,17 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testApplicationId "com.emq.emqapp2.test"
+
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+
         }
     }
     compileOptions {
@@ -30,20 +56,33 @@ android {
         targetCompatibility = 1.8
     }
 
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'x86', 'armeabi-v7a', 'x86_64'
-            universalApk true
-        }
-    }
-
-//    afterEvaluate {
-//        if (tasks.findByPath("connectedDebugAndroidTest") != null) {
-//            connectedDebugAndroidTest.finalizedBy processJenkinsConsole, notifySlack
+//    splits {
+//        abi {
+//            enable true
+//            reset()
+//            include 'x86', 'armeabi-v7a', 'x86_64'
+//            universalApk true
 //        }
 //    }
+
+    afterEvaluate {
+        if (tasks.findByPath("connectedDebugAndroidTest") != null) {
+            connectedDebugAndroidTest.finalizedBy processJenkinsConsole, notifySlack
+        }
+
+        if (tasks.findByPath("assembleDebug") != null) {
+            assembleDebug.finalizedBy zipForDevicefarm
+        }
+    }
+}
+
+task zipForDevicefarm(type: Zip) {
+    archiveFileName = "devicefarm.zip"
+    destinationDirectory = file("$buildDir/devicefarm")
+    from "$buildDir/outputs/apk/debug/app-debug.apk"
+    from "$buildDir/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+    from "$rootDir/app/orchestrator-1.2.0.apk"
+    from "$rootDir/app/test-services-1.2.0.apk"
 }
 
 // * pairs, delimited by a start(1)/pass(0)/fail(-2)/error(-1) status code result. At end of test
@@ -128,6 +167,8 @@ task buildPrintout(type: JavaExec) {
         }
     }
 }
+
+
 
 dependencies {
     androidTestImplementation 'androidx.test:rules:1.2.0'

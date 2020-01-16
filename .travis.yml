@@ -52,8 +52,15 @@ before_script:
   - adb devices
 jobs:
   include:
-      name: Instrumentation-Test
-      script: "./gradlew cAT"
+    - stage: A
+      name: Instrumentation-Test A
+      script: "./gradlew assembleDebugAndroidTest"
+    - stage: B
+      name: Instrumentation-Test B
+      script: "./gradlew assembleDebug"
+
+
+
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
