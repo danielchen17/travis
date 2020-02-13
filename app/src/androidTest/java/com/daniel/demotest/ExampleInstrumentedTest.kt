@@ -109,6 +109,7 @@ class ExampleInstrumentedTest {
         }
     }
 
+
     @Test
     fun testDisplayUser() {
         Intents.init()

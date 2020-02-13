@@ -65,15 +65,15 @@ android {
 //        }
 //    }
 
-    afterEvaluate {
-        if (tasks.findByPath("connectedDebugAndroidTest") != null) {
-            connectedDebugAndroidTest.finalizedBy processJenkinsConsole, notifySlack
-        }
-
-        if (tasks.findByPath("assembleDebug") != null) {
-            assembleDebug.finalizedBy zipForDevicefarm
-        }
-    }
+ //   afterEvaluate {
+//        if (tasks.findByPath("connectedDebugAndroidTest") != null) {
+//            connectedDebugAndroidTest.finalizedBy processJenkinsConsole, notifySlack
+//        }
+//
+//        if (tasks.findByPath("assembleDebug") != null) {
+//            assembleDebug.finalizedBy zipForDevicefarm
+//        }
+    //}
 }
 
 task zipForDevicefarm(type: Zip) {

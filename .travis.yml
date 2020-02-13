@@ -28,6 +28,7 @@ android:
     - 'google-gdk-license-.+'
     - '.*intel.+'
 before_install:
+  - sudo apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils
   - mkdir "$ANDROID_HOME/licenses" || true
   - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
   - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
@@ -42,7 +43,7 @@ install:
   #  - echo y | sdkmanager "extras;android;m2repository"
   - echo y | sdkmanager "system-images;android-$ANDROID_API_LEVEL;$ANDROID_TAG;$ANDROID_ABI"
   - echo no | avdmanager create avd --force -n emq_test -k "system-images;android-$ANDROID_API_LEVEL;$ANDROID_TAG;$ANDROID_ABI" -c 100M
-  - emulator -verbose -avd emq_test -no-accel -no-snapshot -no-window $AUDIO -camera-back none -camera-front none -selinux permissive -qemu -m 2048 &
+  - emulator -verbose -avd emq_test -skin 720x1280 -no-boot-anim -no-snapshot -no-window -no-audio &
   #  - emulator -avd avd001 -no-audio -no-window -no-accel -gpu swiftshader -no-snapshot -no-boot-anim &
   - android-wait-for-emulator
   - adb shell input keyevent 82 &
@@ -54,10 +55,8 @@ jobs:
   include:
     - stage: A
       name: Instrumentation-Test A
-      script: "./gradlew assembleDebugAndroidTest"
-    - stage: B
-      name: Instrumentation-Test B
-      script: "./gradlew assembleDebug"
+      script: "./gradlew cAT"
+
 
 
 
