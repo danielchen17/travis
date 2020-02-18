@@ -74,7 +74,7 @@ class ExampleInstrumentedTest {
         IdlingRegistry.getInstance().register(Idling.idlingResource)
         onView(withId(R.id.textView)).check(matches(withText("false")))
         IdlingRegistry.getInstance().unregister(Idling.idlingResource)
-
+//fdaFDSAFD
     }
 
     class CustomViewAction(private val text: String) : ViewAction {
